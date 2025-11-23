@@ -623,7 +623,7 @@ export default function App() {
             {/* Left: Imports */}
             <div className="flex-1 w-full">
               <label className="block text-sm font-medium text-gray-700 mb-3">Import Data</label>
-              <div className={`grid ${isElectron ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-3`}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Import Excel */}
                 <label className="cursor-pointer flex flex-col items-center justify-center gap-2 px-4 py-4 border border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors group bg-gray-50/50">
                   <FileSpreadsheet className="w-6 h-6 text-gray-400 group-hover:text-blue-500" />
@@ -633,20 +633,6 @@ export default function App() {
                   </div>
                   <input type="file" accept=".xlsx" onChange={handleExcelUpload} className="hidden" />
                 </label>
-
-                {/* Electron: 导入Excel通过文件选择器 */}
-                {isElectron && (
-                  <button
-                    onClick={handleImportExcel}
-                    className="cursor-pointer flex flex-col items-center justify-center gap-2 px-4 py-4 border border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors group bg-gray-50/50"
-                  >
-                    <FolderOpen className="w-6 h-6 text-gray-400 group-hover:text-blue-500" />
-                    <div className="text-center">
-                      <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700 block">Browse Excel</span>
-                      <span className="text-xs text-gray-400">选择Excel文件</span>
-                    </div>
-                  </button>
-                )}
 
                 {/* Import Sources */}
                 <button

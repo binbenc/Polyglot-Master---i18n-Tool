@@ -1,8 +1,12 @@
 {
-  "name": "copy-of-polyglot-master",
+  "name": "polyglot-master",
   "private": true,
   "version": "1.0.0",
   "description": "Polyglot Master - 跨平台国际化资源管理工具",
+  "author": {
+    "name": "Polyglot Master Team",
+    "email": "contact@polyglot-master.com"
+  },
   "main": "dist-electron/main.cjs",
   "type": "module",
   "homepage": "./",
@@ -12,10 +16,14 @@
     "build:web": "vite build",
     "preview": "vite preview",
     "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3001 && electron .\"",
-    "electron:build": "node scripts/build-electron.cjs && npm run build && electron-builder",
-    "electron:build:win": "node scripts/build-electron.cjs && npm run build && electron-builder --win",
-    "electron:build:mac": "node scripts/build-electron.cjs && npm run build && electron-builder --mac",
-    "electron:build:linux": "node scripts/build-electron.cjs && npm run build && electron-builder --linux"
+    "electron:build": "ELECTRON_MIRROR=https://registry.npmmirror.com/-/binary/electron/ ELECTRON_BUILDER_BINARIES_MIRROR=https://registry.npmmirror.com/-/binary/electron-builder-binaries/ node scripts/build-electron.cjs && npm run build && electron-builder",
+    "electron:build:win": "ELECTRON_MIRROR=https://registry.npmmirror.com/-/binary/electron/ ELECTRON_BUILDER_BINARIES_MIRROR=https://registry.npmmirror.com/-/binary/electron-builder-binaries/ node scripts/build-electron.cjs && npm run build && electron-builder --win",
+    "electron:build:mac": "ELECTRON_MIRROR=https://registry.npmmirror.com/-/binary/electron/ ELECTRON_BUILDER_BINARIES_MIRROR=https://registry.npmmirror.com/-/binary/electron-builder-binaries/ node scripts/build-electron.cjs && npm run build && electron-builder --mac",
+    "electron:build:linux": "ELECTRON_MIRROR=https://registry.npmmirror.com/-/binary/electron/ ELECTRON_BUILDER_BINARIES_MIRROR=https://registry.npmmirror.com/-/binary/electron-builder-binaries/ node scripts/build-electron.cjs && npm run build && electron-builder --linux",
+    "build:all": "./scripts/build-all.sh",
+    "build:mac": "./scripts/build-all.sh mac",
+    "build:win": "./scripts/build-all.sh win",
+    "build:linux": "./scripts/build-all.sh linux"
   },
   "dependencies": {
     "@google/genai": "^1.30.0",

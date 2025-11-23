@@ -1,0 +1,11 @@
+version: 1.0.0
+files:
+  - url: Polyglot-Master-1.0.0.dmg
+    sha512: A1wOsGKEUYXT187cexhhV1t+p4fmFA1TWGssfKHmc0EkMC3k3uh2otGwr52Z5PD3MrvBconDkQdUcZYspCjTQA==
+    size: 128220857
+  - url: Polyglot-Master-1.0.0-arm64.dmg
+    sha512: XUYSYf7SvKSRXoBki73aCIYnzvbjqxRc8MfPV5vAOhwbtGYQKyrxvtbpqOZQFSoX9JSZjhiNL6376ESvPU13Xw==
+    size: 122985854
+path: Polyglot-Master-1.0.0.dmg
+sha512: A1wOsGKEUYXT187cexhhV1t+p4fmFA1TWGssfKHmc0EkMC3k3uh2otGwr52Z5PD3MrvBconDkQdUcZYspCjTQA==
+releaseDate: '2025-11-23T03:00:51.755Z'
