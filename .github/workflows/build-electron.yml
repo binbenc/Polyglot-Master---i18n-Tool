@@ -1,0 +1,128 @@
+name: Build Electron Application
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Setup Electron mirrors (Linux/macOS)
+      if: runner.os != 'Windows'
+      run: |
+        echo "ELECTRON_MIRROR=https://registry.npmmirror.com/-/binary/electron/" >> $GITHUB_ENV
+        echo "ELECTRON_BUILDER_BINARIES_MIRROR=https://registry.npmmirror.com/-/binary/electron-builder-binaries/" >> $GITHUB_ENV
+
+    - name: Setup Electron mirrors (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        echo "ELECTRON_MIRROR=https://registry.npmmirror.com/-/binary/electron/" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "ELECTRON_BUILDER_BINARIES_MIRROR=https://registry.npmmirror.com/-/binary/electron-builder-binaries/" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+    - name: Build Electron main process
+      run: node scripts/build-electron.cjs
+
+    - name: Build React application
+      run: npm run build
+
+    - name: Build Electron application (Linux)
+      if: runner.os == 'Linux'
+      run: npx electron-builder --linux
+
+    - name: Build Electron application (Windows)
+      if: runner.os == 'Windows'
+      run: npx electron-builder --win
+
+    - name: Build Electron application (macOS)
+      if: runner.os == 'macOS'
+      run: npx electron-builder --mac
+
+    - name: Upload artifacts (Linux)
+      if: runner.os == 'Linux'
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-appimage
+        path: |
+          release/*.AppImage
+          release/*.zip
+        retention-days: 30
+
+    - name: Upload artifacts (Windows)
+      if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-installer
+        path: |
+          release/*.exe
+          release/*.zip
+        retention-days: 30
+
+    - name: Upload artifacts (macOS)
+      if: runner.os == 'macOS'
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-dmg
+        path: |
+          release/*.dmg
+          release/*.zip
+        retention-days: 30
+
+  # Release job for tagged releases
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Setup Electron mirrors
+      run: |
+        echo "ELECTRON_MIRROR=https://registry.npmmirror.com/-/binary/electron/" >> $GITHUB_ENV
+        echo "ELECTRON_BUILDER_BINARIES_MIRROR=https://registry.npmmirror.com/-/binary/electron-builder-binaries/" >> $GITHUB_ENV
+
+    - name: Build all platforms
+      run: npm run build:all
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          release/*.exe
+          release/*.dmg
+          release/*.AppImage
+          release/*.zip
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
