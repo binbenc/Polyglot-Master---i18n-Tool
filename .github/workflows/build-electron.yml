@@ -45,6 +45,9 @@ jobs:
     - name: Build React application
       run: npm run build
 
+    - name: Fix icon configuration
+      run: ./scripts/fix-icon.sh
+
     - name: Build Electron application (Linux)
       if: runner.os == 'Linux'
       run: npx electron-builder --linux
