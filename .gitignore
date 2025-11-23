@@ -14,7 +14,13 @@ dist-ssr
 dist-electron
 *.local
 
+# Release builds and executables
 release/
+*.dmg
+*.app
+*.exe
+*.deb
+*.rpm
 
 # Environment files
 .env
