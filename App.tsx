@@ -1,11 +1,12 @@
 
-import React, { useState, useRef } from 'react';
-import { Upload, Download, FileSpreadsheet, Save, Globe, Check, AlertCircle, Loader2, Wand2, Plus, Trash2, X, FileCode } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Upload, Download, FileSpreadsheet, Save, Globe, Check, AlertCircle, Loader2, Wand2, Plus, Trash2, X, FileCode, FolderOpen } from 'lucide-react';
 import { I18nProject, ColumnMetadata, TranslationRow, Platform } from './types';
 import { parseExcel, generateExcelBuffer } from './utils/excelParser';
 import { generateZip } from './utils/generators';
 import { translateBatch } from './services/gemini';
 import { createProjectFromSourceFiles, parseContent, ParsedFile } from './utils/sourceParser';
+import { electronAPI, FileFilters, CommonFilters } from './utils/electronAPI';
 import saveAs from 'file-saver';
 
 const EXAMPLE_PROJECT: I18nProject = {
@@ -41,12 +42,43 @@ export default function App() {
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [translatingLang, setTranslatingLang] = useState<string | null>(null);
-  
+
   // Import Modal State
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importPlatform, setImportPlatform] = useState<Platform>(Platform.ANDROID);
   const [baseFile, setBaseFile] = useState<FileInputState>({ id: 'base', file: null, langCode: 'en-US', path: '' });
   const [otherFiles, setOtherFiles] = useState<FileInputState[]>([]);
+
+  // 检查是否在Electron环境中
+  const isElectron = typeof window !== 'undefined' && window.electronAPI;
+
+  // 监听Electron菜单事件
+  useEffect(() => {
+    if (!isElectron) return;
+
+    const handleMenuAction = async (action: string) => {
+      switch (action) {
+        case 'menu-open-project':
+          await handleOpenProject();
+          break;
+        case 'menu-save-project':
+          await handleSaveProject();
+          break;
+        case 'menu-import-excel':
+          await handleImportExcel();
+          break;
+        case 'menu-export-excel':
+          handleDownloadExcel();
+          break;
+      }
+    };
+
+    electronAPI.onMenuAction(handleMenuAction);
+
+    return () => {
+      electronAPI.removeAllListeners('menu-action');
+    };
+  }, [project, isElectron]);
 
   // --- File Handlers ---
 
@@ -93,6 +125,90 @@ export default function App() {
 
   const loadExample = () => {
     setProject(EXAMPLE_PROJECT);
+  };
+
+  // --- Electron 特定文件处理 ---
+
+  const handleOpenProject = async () => {
+    if (!isElectron) return;
+
+    try {
+      const result = await electronAPI.selectFile({
+        filters: [FileFilters.json],
+        title: '打开项目文件'
+      });
+
+      if (!result.canceled && result.filePaths && result.filePaths.length > 0) {
+        const filePath = result.filePaths[0];
+        const fileResult = await electronAPI.readFile(filePath);
+
+        if (fileResult.success && fileResult.data) {
+          const projectData = JSON.parse(fileResult.data);
+          setProject(projectData);
+          setError('');
+        } else {
+          setError('无法读取项目文件');
+        }
+      }
+    } catch (err: any) {
+      setError(err.message || '打开项目失败');
+    }
+  };
+
+  const handleSaveProject = async () => {
+    if (!isElectron || !project) return;
+
+    try {
+      const result = await electronAPI.saveFile(
+        'polyglot_project.json',
+        [FileFilters.json]
+      );
+
+      if (!result.canceled && result.filePath) {
+        const projectData = JSON.stringify(project, null, 2);
+        const writeResult = await electronAPI.writeFile(result.filePath, projectData);
+
+        if (!writeResult.success) {
+          setError('保存项目失败: ' + writeResult.error);
+        }
+      }
+    } catch (err: any) {
+      setError(err.message || '保存项目失败');
+    }
+  };
+
+  const handleImportExcel = async () => {
+    if (!isElectron) return;
+
+    try {
+      const result = await electronAPI.selectFile({
+        filters: [FileFilters.excel],
+        title: '导入 Excel 文件'
+      });
+
+      if (!result.canceled && result.filePaths && result.filePaths.length > 0) {
+        const filePath = result.filePaths[0];
+
+        // 读取文件内容
+        const fileResult = await electronAPI.readFile(filePath);
+        if (fileResult.success && fileResult.data) {
+          // 将文件内容转换为File对象
+          const blob = new Blob([fileResult.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          const file = new File([blob], 'import.xlsx', { type: blob.type });
+
+          setLoading(true);
+          setError('');
+          const parsed = await parseExcel(file);
+          setProject(parsed);
+        } else {
+          setError('无法读取Excel文件');
+        }
+        setLoading(false);
+      }
+    } catch (err: any) {
+      setError(err.message || '导入Excel失败');
+      setLoading(false);
+    }
   };
 
   // --- Import Source Logic ---
@@ -460,15 +576,36 @@ export default function App() {
             </div>
           </div>
           <div className="flex gap-3">
-            <button 
+            {isElectron && (
+              <>
+                <button
+                  onClick={handleOpenProject}
+                  className="hidden sm:flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 px-3 py-2"
+                  title="打开项目文件"
+                >
+                  <FolderOpen className="w-4 h-4" />
+                  打开
+                </button>
+                <button
+                  onClick={handleSaveProject}
+                  disabled={!project}
+                  className="hidden sm:flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="保存项目文件"
+                >
+                  <Save className="w-4 h-4" />
+                  保存
+                </button>
+              </>
+            )}
+            <button
               onClick={loadExample}
               className="hidden sm:flex text-sm text-gray-600 hover:text-blue-600 px-3 py-2"
             >
               Load Example
             </button>
-            <a 
-              href="https://ai.google.dev/gemini-api/docs" 
-              target="_blank" 
+            <a
+              href="https://ai.google.dev/gemini-api/docs"
+              target="_blank"
               className="text-xs text-gray-400 hover:text-gray-600 flex items-center"
             >
               Powered by Gemini
@@ -486,7 +623,7 @@ export default function App() {
             {/* Left: Imports */}
             <div className="flex-1 w-full">
               <label className="block text-sm font-medium text-gray-700 mb-3">Import Data</label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className={`grid ${isElectron ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-3`}>
                 {/* Import Excel */}
                 <label className="cursor-pointer flex flex-col items-center justify-center gap-2 px-4 py-4 border border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors group bg-gray-50/50">
                   <FileSpreadsheet className="w-6 h-6 text-gray-400 group-hover:text-blue-500" />
@@ -497,8 +634,22 @@ export default function App() {
                   <input type="file" accept=".xlsx" onChange={handleExcelUpload} className="hidden" />
                 </label>
 
+                {/* Electron: 导入Excel通过文件选择器 */}
+                {isElectron && (
+                  <button
+                    onClick={handleImportExcel}
+                    className="cursor-pointer flex flex-col items-center justify-center gap-2 px-4 py-4 border border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors group bg-gray-50/50"
+                  >
+                    <FolderOpen className="w-6 h-6 text-gray-400 group-hover:text-blue-500" />
+                    <div className="text-center">
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700 block">Browse Excel</span>
+                      <span className="text-xs text-gray-400">选择Excel文件</span>
+                    </div>
+                  </button>
+                )}
+
                 {/* Import Sources */}
-                <button 
+                <button
                   onClick={() => setIsImportModalOpen(true)}
                   className="cursor-pointer flex flex-col items-center justify-center gap-2 px-4 py-4 border border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors group bg-gray-50/50"
                 >
