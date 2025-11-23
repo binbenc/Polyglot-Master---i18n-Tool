@@ -21,6 +21,7 @@ release/
 *.exe
 *.deb
 *.rpm
+*.asar
 
 # Environment files
 .env
