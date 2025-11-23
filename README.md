@@ -126,11 +126,155 @@ polyglot-master/
 2. 启动开发模式：`npm run electron:dev`
 3. 修改代码后自动热重载
 
-### 用户
-1. 下载对应平台的安装包
-2. 安装并启动应用
-3. 使用菜单或界面按钮进行文件操作
-4. 保存项目以供后续使用
+### 用户使用指南
+
+#### 1. 应用启动
+- 安装对应平台的安装包（Windows .exe / macOS .dmg / Linux .AppImage）
+- 启动应用后会看到主界面：
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  🌍 Polyglot Master                            Load Example  ⚙️  │
+│  Cross-platform i18n Manager                         Powered by Gemini │
+└─────────────────────────────────────────────────────────────────┘
+
+┌───────────────── Import Data ────────────────── Export Data ──────────────────┐
+│                                                         │                         │
+│  📊 Import Excel       📁 Import Sources          │  💾 Download ZIP   │
+│   .xlsx templates      xml, strings, arb           │  Export all files  │
+│                                                         │                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 2. 导入Excel数据
+**方法一：拖拽导入**
+- 直接将 `.xlsx` 文件拖拽到 "Import Excel" 区域
+
+**方法二：点击导入**
+- 点击 "Import Excel" 按钮
+- 选择 Excel 文件（支持 `.xlsx`, `.xls` 格式）
+- 文件会自动解析并显示在表格中
+
+**Excel文件格式示例：**
+```
+| Key         | en-US      | zh-CN      | ja-JP      |
+|-------------|------------|------------|------------|
+| app_name    | My App     | 我的应用    | 私のアプリ   |
+| welcome     | Welcome    | 欢迎       | よこそ      |
+| good_morning| Good morning| 早上好     | おはよう     |
+| save        | Save       | 保存        | 保存         |
+```
+
+#### 3. 导入源文件
+点击 "Import Sources" 按钮，支持以下格式：
+
+**Android XML:**
+```xml
+<resources>
+    <string name="app_name">My App</string>
+    <string name="welcome">Welcome</string>
+</resources>
+```
+
+**iOS Strings:**
+```
+"app_name" = "My App";
+"welcome" = "Welcome";
+```
+
+**Flutter ARB:**
+```json
+{
+  "app_name": "My App",
+  "welcome": "Welcome"
+}
+```
+
+#### 4. 管理翻译数据
+
+**编辑翻译：**
+- 直接在表格单元格中点击编辑
+- 支持多行文本和特殊字符
+- 修改内容会自动保存
+
+**AI翻译：**
+- 点击 "🪙 Translate" 按钮
+- 选择要翻译的语言列
+- 使用 Google Gemini API 自动翻译缺失内容
+
+**添加新语言：**
+- 点击 "+" 按钮添加新语言列
+- 设置语言代码和平台文件名
+
+#### 5. 导出资源文件
+
+**导出ZIP压缩包：**
+- 点击 "💾 Download ZIP" 按钮
+- 自动生成包含所有平台文件的ZIP包
+- ZIP结构：
+```
+i18n_resources.zip
+├── android/
+│   └── values-zh-rCN/
+│       └── strings.xml
+├── ios/
+│   └── zh-Hans.lproj/
+│       └── Localizable.strings
+└── flutter/
+    └── lib/l10n/
+        └── app_zh.arb
+```
+
+**导出Excel文件：**
+- 点击 "📊 Download Excel" 按钮
+- 生成包含所有翻译数据的Excel文件
+- 可用于团队协作和备份
+
+#### 6. 项目管理（桌面应用特有）
+
+**保存项目：**
+- 使用菜单 `文件 > 保存项目` 或按 `Ctrl/Cmd + S`
+- 项目保存为 `polyglot_project.json` 文件
+- 包含完整的翻译数据和配置信息
+
+**打开项目：**
+- 使用菜单 `文件 > 打开项目` 或按 `Ctrl/Cmd + O`
+- 选择之前保存的项目文件
+- 恢复完整的工作状态
+
+### 快捷键指南
+
+| 功能 | Windows | macOS | 说明 |
+|------|---------|-------|------|
+| 打开项目 | `Ctrl + O` | `Cmd + O` | 打开JSON项目文件 |
+| 保存项目 | `Ctrl + S` | `Cmd + S` | 保存当前项目 |
+| 退出应用 | `Alt + F4` | `Cmd + Q` | 关闭应用 |
+| 开发者工具 | `F12` | `F12` | 开发模式专用 |
+| 复制 | `Ctrl + C` | `Cmd + C` | 复制选中文本 |
+| 粘贴 | `Ctrl + V` | `Cmd + V` | 粘贴文本 |
+
+### 常见工作流程
+
+#### 流程一：从Excel开始
+1. 准备包含翻译内容的Excel文件
+2. 启动应用并导入Excel文件
+3. 检查数据完整性
+4. 使用AI翻译填充缺失内容
+5. 导出多平台资源文件
+
+#### 流程二：从现有项目开始
+1. 启动应用
+2. 导入现有的源文件（Android/iOS/Flutter）
+3. 添加新语言支持
+4. 翻译和完善内容
+5. 导出完整的资源文件
+
+#### 流程三：团队协作
+1. 导入Excel模板开始翻译工作
+2. 完成所有语言的翻译
+3. 导出Excel文件分享给团队
+4. 收集反馈并更新内容
+5. 最终导出平台特定的资源文件
 
 ## 🔜 未来扩展
 
